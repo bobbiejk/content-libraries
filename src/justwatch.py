@@ -1,6 +1,7 @@
-
-
-
+# packages needed
+from bs4 import BeautifulSoup
+from time import sleep
+import requests
 
 # get url to scrape from
 base_url = "https://www.justwatch.com" 
@@ -23,3 +24,4 @@ for service in service_abbreviations:
 
 url = base_url + location_url + provider_url + service_url
 
+s
