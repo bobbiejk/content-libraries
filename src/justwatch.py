@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 from time import sleep
 import requests
+import selenium
 
 # get url to scrape from
 base_url = "https://www.justwatch.com" 
@@ -24,4 +25,11 @@ for service in service_abbreviations:
 
 url = base_url + location_url + provider_url + service_url
 
-s
+# set up selenium
+driver = webdriver.Chrome()
+
+driver.get(url)
+sleep(2)
+request = driver.page_source.encode("utf-8")
+soup = BeautifulSoup(request, "html.parser")
+
