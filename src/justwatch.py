@@ -6,6 +6,10 @@ from selenium import webdriver
 import regex as re
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+import os
+
+os.chdir("S:/content-libraries")
+print(os.getcwd())
 
 try:
     os.makedirs("data")
@@ -115,14 +119,14 @@ def collect_titles():
               
     return(content_library)
 
-def append_csv(content_library = content_library):
+def append_csv(content_library):
 
     if os.path.isfile("data/content_library.csv") == False:
         with open("data/content_library.csv", "a", newline="") as csv_file:
             writer = csv.writer(csv_file, delimiter=";")
             writer.writerow(["service", "date", "nr_releases", "url"])
     
-    with open(dirname+filename_csv, "a", newline="") as csv_file:
+    with open("data/content_library.csv", "a", newline="") as csv_file:
         writer = csv.writer(csv_file, delimiter=";")
         for content in content_library:
             writer.writerow([content["service"], content["date"], content['nr_releases'], content['url']])
