@@ -45,8 +45,30 @@ request = driver.page_source.encode("utf-8")
 soup = BeautifulSoup(request, "html.parser")
 
 
+def scroll_page():
 
-def collect_all_while_scrolling():
+    scroll_pause  = 0.5
+
+    # get scroll height
+    last_height = driver.execute_script("return document.body.scrollHeight")
+
+    while True:
+        # Scroll down to bottom
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        # Wait to load page
+        sleep(scroll_pause)
+
+        # Calculate new scroll height and compare with last scroll height
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
+        scroll_pause = scroll_pause + 0.005
+
+    return("Scrolled to end..")
+
+def collect_titles():
 
     # get the timeline
     timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
