@@ -44,57 +44,62 @@ request = driver.page_source.encode("utf-8")
 
 soup = BeautifulSoup(request, "html.parser")
 
-# get the timeline
-timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
-timeline_driver = driver.find_element_by_class_name("timeline")
-time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
 
-content_library = []
 
-counter = 0
+def collect_all_while_scrolling():
 
-for time_item in timeline:
-    
-    nr_releases = time_item.get_text().split(" ")[1]
-    nr_scrols = round(int(nr_releases)/8)
-    date = time_item.attrs["class"][1][21:31]
-    service = time_item.find("img").attrs["alt"]
-    print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols} times..")
-    
-    scrolled = 0
-    
-    while scrolled <= nr_scrols:
+    # get the timeline
+    timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
+    timeline_driver = driver.find_element_by_class_name("timeline")
+    time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
+
+    content_library = []
+
+    counter = 0
+
+    for time_item in timeline:
         
-        titles = time_item.find_all("a")
-
-        for item in range(len(titles)):
-
-            if item < 8:
-                try:
-                    item_url = titles[item].attrs["href"]
-                except:
-                    print(f"Didn't work out for {titles[item]}")
-
-            if item > 7:
-                    print('Scrolling to the left to collect more titles')
-                    element_to_hover_over = time_items_driver[counter]
-                    hover = ActionChains(driver).move_to_element(element_to_hover_over)
-                    hover.perform()
-                    sleep(2)
-                    scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav")  
-     
-                    scroll.click()
-                    scrolled += 1
-                    break    
+        nr_releases = time_item.get_text().split(" ")[1]
+        nr_scrols = round(int(nr_releases)/8)
+        date = time_item.attrs["class"][1][21:31]
+        service = time_item.find("img").attrs["alt"]
+        print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols} times..")
+        
+        scrolled = 0
+        
+        while scrolled <= nr_scrols:
             
-            content_library.append({"service": service,
-                                    "date": date,
-                                    "nr_releases": nr_releases,
-                                    "url": base_url + item_url})
+            titles = time_item.find_all("a")
 
-        scrolled += 1 
-    
-    print(content_library)
-    counter += 1 
+            for item in range(len(titles)):
+
+                if item < 8:
+                    try:
+                        item_url = titles[item].attrs["href"]
+                    except:
+                        print(f"Didn't work out for {titles[item]}")
+
+                if item > 7:
+                        print('Scrolling to the left to collect more titles')
+                        element_to_hover_over = time_items_driver[counter]
+                        hover = ActionChains(driver).move_to_element(element_to_hover_over)
+                        hover.perform()
+                        sleep(2)
+                        scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav")  
+        
+                        scroll.click()
+                        scrolled += 1
+                        break    
+                
+                content_library.append({"service": service,
+                                        "date": date,
+                                        "nr_releases": nr_releases,
+                                        "url": base_url + item_url})
+
+            scrolled += 1 
+        
+        print(content_library)
+        counter += 1 
               
+    return(content_library)
 # %%
