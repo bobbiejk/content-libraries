@@ -7,6 +7,7 @@ import regex as re
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 import os
+import csv
 
 os.chdir("S:/content-libraries")
 print(os.getcwd())
