@@ -10,7 +10,6 @@ import os
 import csv
 
 os.chdir("S:/content-libraries")
-print(os.getcwd())
 
 try:
     os.makedirs("data")
@@ -31,27 +30,6 @@ service_keys = {"amazon":"amp",
                 "hulu":"hlu",
                 "netflix":"nfx"}
 
-service_abbreviations = service_keys.values()
-
-service_url = "" 
-for service in service_abbreviations:
-    service_url = service_url + service
-
-    if service != "nfx":
-        service_url = service_url + ","
-
-url = base_url + location_url + provider_url + service_url
-
-# set up selenium
-driver = webdriver.Chrome()
-print(type(driver))
-
-driver.get(url)
-sleep(2)
-request = driver.page_source.encode("utf-8")
-
-soup = BeautifulSoup(request, "html.parser")
-
 def scroll_page():
 
     scroll_pause  = 0.5
@@ -61,17 +39,20 @@ def scroll_page():
 
     while True:
         # Scroll down to bottom
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        try:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        except:
+            # try to remove the error of the max entries 
+            break
 
-        # Wait to load page
         sleep(scroll_pause)
 
-        # Calculate new scroll height and compare with last scroll height
+        # calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
             break
         last_height = new_height
-        scroll_pause = scroll_pause + 0.005
+        scroll_pause = scroll_pause + 0.1
 
     return("Scrolled to end..")
 
@@ -83,7 +64,7 @@ def collect_titles():
     nr_scrols = round(int(nr_releases)/8)
     date = time_item.attrs["class"][1][21:31]
     service = time_item.find("img").attrs["alt"]
-    print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols} times..")
+    print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols-1} times..")
     
     scrolled = 0
     
@@ -100,16 +81,20 @@ def collect_titles():
                     print(f"Didn't work out for {titles[item]}")
 
             if item > 7:
-                    print('Scrolling to the left to collect more titles')
+                    print(f'Preparing to scroll..')
                     element_to_hover_over = time_items_driver[counter]
                     hover = ActionChains(driver).move_to_element(element_to_hover_over)
                     hover.perform()
-                    sleep(2)
+                    print(f'Hovering over element..')
                     scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav")  
-    
-                    scroll.click()
+                    try:
+                        scroll.click()
+                        print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
+                    except:
+                        print("Scroll could not be found")
+                        break
                     scrolled += 1
-                    break    
+                    sleep(2)
             
             content_library.append({"service": service,
                                     "date": date,
@@ -134,18 +119,33 @@ def append_csv(content_library):
 
     return
 
-# scroll to the end of the page
-scroll_page()
+service_abbreviations = service_keys.values()
 
-# get the timeline
-timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
-timeline_driver = driver.find_element_by_class_name("timeline")
-time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
+for service in service_abbreviations:
 
-counter = 0
+    url = base_url + location_url + provider_url + service
 
-for time_item in timeline:
-    
-    content_library = collect_titles()
-    append_csv(content_library)
-    counter += 1 
+    # set up selenium
+    driver = webdriver.Chrome()
+
+    driver.get(url)
+    sleep(2)
+    request = driver.page_source.encode("utf-8")
+    soup = BeautifulSoup(request, "html.parser")
+
+    scroll_page()
+    request = driver.page_source.encode('utf-8')
+    soup = BeautifulSoup(request, "html.parser")
+
+    # get the timeline
+    timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
+    timeline_driver = driver.find_element_by_class_name("timeline")
+    time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
+
+    counter = 0
+
+    for time_item in timeline:
+        
+        content_library = collect_titles()
+        append_csv(content_library)
+        counter += 1 
