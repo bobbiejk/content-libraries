@@ -8,6 +8,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 import os
 import csv
+import math
 
 os.chdir("S:/content-libraries")
 
@@ -53,6 +54,7 @@ def scroll_page():
             break
         last_height = new_height
         scroll_pause = scroll_pause + 0.1
+        print(scroll_pause)
 
     return("Scrolled to end..")
 
@@ -61,40 +63,46 @@ def collect_titles():
     content_library = []
         
     nr_releases = time_item.get_text().split(" ")[1]
-    nr_scrols = round(int(nr_releases)/8)
+    nr_scrols = math.ceil((int(nr_releases)/8))
     date = time_item.attrs["class"][1][21:31]
     service = time_item.find("img").attrs["alt"]
-    print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols-1} times..")
+
+    if nr_scrols > 1:
+        print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols-1} times..")
     
     scrolled = 0
     
-    while scrolled <= nr_scrols:
+    while scrolled < nr_scrols:
         
-        titles = time_item.find_all("a")
+        titles = time_item.find_all(class_="horizontal-title-list__item") 
 
-        for item in range(len(titles)):
+        if len(titles) > 8:
+            range_len = 9
+        else:
+            range_len = len(titles)
+
+        for item in range(range_len):
 
             if item < 8:
                 try:
+                    print(f"Collecting title {item+scrolled*8+1}...")
                     item_url = titles[item].attrs["href"]
                 except:
                     print(f"Didn't work out for {titles[item]}")
 
             if item > 7:
-                    print(f'Preparing to scroll..')
-                    element_to_hover_over = time_items_driver[counter]
-                    hover = ActionChains(driver).move_to_element(element_to_hover_over)
-                    hover.perform()
-                    print(f'Hovering over element..')
-                    scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav")  
-                    try:
-                        scroll.click()
-                        print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
-                    except:
-                        print("Scroll could not be found")
-                        break
-                    scrolled += 1
-                    sleep(2)
+                print(f'Preparing to scroll..')
+                element_to_hover_over = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar")
+                hover = ActionChains(driver).move_to_element(element_to_hover_over)
+                hover.perform()
+                print(f'Hovering over element..')
+                scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav--right") 
+                print(scroll) 
+                scroll.click()
+                print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
+
+                scrolled += 1
+                sleep(2)
             
             content_library.append({"service": service,
                                     "date": date,
@@ -129,7 +137,7 @@ for service in service_abbreviations:
     driver = webdriver.Chrome()
 
     driver.get(url)
-    sleep(2)
+    sleep(10)
     request = driver.page_source.encode("utf-8")
     soup = BeautifulSoup(request, "html.parser")
 
@@ -149,3 +157,6 @@ for service in service_abbreviations:
         content_library = collect_titles()
         append_csv(content_library)
         counter += 1 
+
+    driver.quit()
+
