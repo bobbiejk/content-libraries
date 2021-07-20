@@ -61,36 +61,42 @@ def scroll_page():
 def collect_titles():
 
     content_library = []
-        
+    
+    # number of releases on that day
     nr_releases = time_item.get_text().split(" ")[1]
-    nr_scrols = math.ceil((int(nr_releases)/8))
+
+    # number of scrolls needed in order to get all those releases
+    nr_scrols = math.ceil((int(nr_releases)/8)) - 1
+
     date = time_item.attrs["class"][1][21:31]
     service = time_item.find("img").attrs["alt"]
 
     if nr_scrols > 1:
-        print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols-1} times..")
+        print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols} times..")
     
     scrolled = 0
     
-    while scrolled < nr_scrols:
+    while scrolled <= nr_scrols:
         
         titles = time_item.find_all(class_="horizontal-title-list__item") 
+        print(len(titles))
 
         if len(titles) > 8:
-            range_len = 9
+            range_len = 8
         else:
             range_len = len(titles)
 
         for item in range(range_len):
 
-            if item < 8:
+            if item <= 7:
                 try:
                     print(f"Collecting title {item+scrolled*8+1}...")
                     item_url = titles[item].attrs["href"]
                 except:
                     print(f"Didn't work out for {titles[item]}")
 
-            if item > 7:
+            # item == 8 implies that all titles on page that can be seen are collected, now need to scroll    
+            if item == 8:
                 print(f'Preparing to scroll..')
                 element_to_hover_over = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar")
                 hover = ActionChains(driver).move_to_element(element_to_hover_over)
@@ -103,6 +109,14 @@ def collect_titles():
 
                 scrolled += 1
                 sleep(2)
+
+                # request page with having scrolled
+                request = driver.page_source.encode("utf-8")
+                soup = BeautifulSoup(request, "html.parser")
+
+                timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
+                timeline_driver = driver.find_element_by_class_name("timeline")
+                time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
             
             content_library.append({"service": service,
                                     "date": date,
