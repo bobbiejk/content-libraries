@@ -153,9 +153,9 @@ for service in service_abbreviations:
     request = driver.page_source.encode("utf-8")
     soup = BeautifulSoup(request, "html.parser")
 
-    #scroll_page()
-    #request = driver.page_source.encode('utf-8')
-    #soup = BeautifulSoup(request, "html.parser")
+    scroll_page()
+    request = driver.page_source.encode('utf-8')
+    soup = BeautifulSoup(request, "html.parser")
 
     # get the timeline
     timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
