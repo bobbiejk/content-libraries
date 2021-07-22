@@ -60,17 +60,7 @@ def scroll_page():
 
     return("Scrolled to end..")
 
-
-def collect_titles(time_item, time_items_driver, timeline):
-
-    content_library = []
-    
-    # number of releases on that day
-    nr_releases = time_item.get_text().split(" ")[1]
-
-    date = time_item.attrs["class"][1][21:31]
-    service = time_item.find("img").attrs["alt"]
-    print(f'On {date}, {service} released {nr_releases} titles..')
+def scroll():
 
     scrolled = 0
     
@@ -87,19 +77,42 @@ def collect_titles(time_item, time_items_driver, timeline):
             print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
         except:
             print("End of the list reached, no need to scroll further..")
-            break
+            return
 
         sleep(2)
 
         scrolled = scrolled + 1
 
-    request = driver.page_source.encode("utf-8")
-    soup = BeautifulSoup(request, "html.parser")
-    timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
-    timeline_driver = driver.find_element_by_class_name("timeline")
-    time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
-        
-    titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
+    return 
+
+def collect_titles(time_item, time_items_driver, timeline):
+
+    content_library = []
+    
+    # number of releases on that day
+    nr_releases = time_item.get_text().split(" ")[1]
+
+    date = time_item.attrs["class"][1][21:31]
+    service = time_item.find("img").attrs["alt"]
+    print(f'On {date}, {service} released {nr_releases} titles..')
+
+    collected_titles = 0
+
+    while collected_titles != int(nr_releases):
+
+        print("woo")
+
+        scroll()
+
+        request = driver.page_source.encode("utf-8")
+        soup = BeautifulSoup(request, "html.parser")
+        timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
+        timeline_driver = driver.find_element_by_class_name("timeline")
+        time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
+            
+        titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
+        collected_titles = len(titles)
+    
 
     for title in titles:
         print(title.get_attribute("href"))
@@ -146,9 +159,9 @@ for service in service_abbreviations:
     request = driver.page_source.encode("utf-8")
     soup = BeautifulSoup(request, "html.parser")
 
-    scroll_page()
-    request = driver.page_source.encode('utf-8')
-    soup = BeautifulSoup(request, "html.parser")
+    #scroll_page()
+    #request = driver.page_source.encode('utf-8')
+    #soup = BeautifulSoup(request, "html.parser")
 
     # get the timeline
     timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
