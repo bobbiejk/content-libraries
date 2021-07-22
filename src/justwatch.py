@@ -60,6 +60,7 @@ def scroll_page():
 
     return("Scrolled to end..")
 
+
 def collect_titles(time_item, time_items_driver, timeline):
 
     content_library = []
@@ -69,6 +70,7 @@ def collect_titles(time_item, time_items_driver, timeline):
 
     date = time_item.attrs["class"][1][21:31]
     service = time_item.find("img").attrs["alt"]
+    print(f'On {date}, {service} released {nr_releases} titles..')
 
     scrolled = 0
     
@@ -81,12 +83,11 @@ def collect_titles(time_item, time_items_driver, timeline):
         print(f'Hovering over element..')
         try:
             scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav--right") 
+            scroll.click()
+            print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
         except:
             print("End of the list reached, no need to scroll further..")
             break
-        print(scroll) 
-        scroll.click()
-        print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
 
         sleep(2)
 
@@ -99,8 +100,6 @@ def collect_titles(time_item, time_items_driver, timeline):
     time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
         
     titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
-        
-    print(timeline[counter])
 
     for title in titles:
         print(title.get_attribute("href"))
