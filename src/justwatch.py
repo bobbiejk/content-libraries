@@ -100,8 +100,6 @@ def collect_titles(time_item, time_items_driver, timeline):
 
     while collected_titles != int(nr_releases):
 
-        print("woo")
-
         scroll()
 
         request = driver.page_source.encode("utf-8")
@@ -112,14 +110,10 @@ def collect_titles(time_item, time_items_driver, timeline):
             
         titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
         collected_titles = len(titles)
-    
-
-    for title in titles:
-        print(title.get_attribute("href"))
 
     for item in range(int(nr_releases)):
 
-        print(item)
+        print(f'Collecting title {item}..')
 
         item_url = titles[item].get_attribute("href")
             
