@@ -6,6 +6,8 @@ from selenium import webdriver
 import regex as re
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import os
 import csv
 import math
@@ -58,72 +60,62 @@ def scroll_page():
 
     return("Scrolled to end..")
 
-def collect_titles():
+def collect_titles(time_item, time_items_driver, timeline):
 
     content_library = []
     
     # number of releases on that day
     nr_releases = time_item.get_text().split(" ")[1]
 
-    # number of scrolls needed in order to get all those releases
-    nr_scrols = math.ceil((int(nr_releases)/8)) - 1
-
     date = time_item.attrs["class"][1][21:31]
     service = time_item.find("img").attrs["alt"]
 
-    if nr_scrols > 1:
-        print(f"There are {nr_releases} on {date} for service {service}. Need to scroll {nr_scrols} times..")
-    
     scrolled = 0
     
-    while scrolled <= nr_scrols:
+    while True:
+
+        print(f'Preparing to scroll..')
+        element_to_hover_over = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar")
+        hover = ActionChains(driver).move_to_element(element_to_hover_over)
+        hover.perform()
+        print(f'Hovering over element..')
+        try:
+            scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav--right") 
+        except:
+            print("End of the list reached, no need to scroll further..")
+            break
+        print(scroll) 
+        scroll.click()
+        print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
+
+        sleep(2)
+
+        scrolled = scrolled + 1
+
+    request = driver.page_source.encode("utf-8")
+    soup = BeautifulSoup(request, "html.parser")
+    timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
+    timeline_driver = driver.find_element_by_class_name("timeline")
+    time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
         
-        titles = time_item.find_all(class_="horizontal-title-list__item") 
-        print(len(titles))
+    titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
+        
+    print(timeline[counter])
 
-        if len(titles) > 8:
-            range_len = 8
-        else:
-            range_len = len(titles)
+    for title in titles:
+        print(title.get_attribute("href"))
 
-        for item in range(range_len):
+    for item in range(int(nr_releases)):
 
-            if item <= 7:
-                try:
-                    print(f"Collecting title {item+scrolled*8+1}...")
-                    item_url = titles[item].attrs["href"]
-                except:
-                    print(f"Didn't work out for {titles[item]}")
+        print(item)
 
-            # item == 8 implies that all titles on page that can be seen are collected, now need to scroll    
-            if item == 8:
-                print(f'Preparing to scroll..')
-                element_to_hover_over = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar")
-                hover = ActionChains(driver).move_to_element(element_to_hover_over)
-                hover.perform()
-                print(f'Hovering over element..')
-                scroll = time_items_driver[counter].find_element_by_class_name("hidden-horizontal-scrollbar__nav--right") 
-                print(scroll) 
-                scroll.click()
-                print(f'Succesfully scrolled to the left for the {scrolled+1}th time..') 
-
-                scrolled += 1
-                sleep(2)
-
-                # request page with having scrolled
-                request = driver.page_source.encode("utf-8")
-                soup = BeautifulSoup(request, "html.parser")
-
-                timeline = soup.find(class_ = "timeline").find_all(class_= re.compile("timeline__provider-block timeline__timeframe--"))
-                timeline_driver = driver.find_element_by_class_name("timeline")
-                time_items_driver = timeline_driver.find_elements_by_class_name("timeline__provider-block")
+        item_url = titles[item].get_attribute("href")
             
-            content_library.append({"service": service,
-                                    "date": date,
-                                    "nr_releases": nr_releases,
-                                    "url": base_url + item_url})
-
-        scrolled += 1 
+        content_library.append({"service": service,
+                                "date": date,
+                                "nr_releases": nr_releases,
+                                "url": base_url + item_url})
+ 
               
     return(content_library)
 
@@ -149,7 +141,7 @@ for service in service_abbreviations:
 
     # set up selenium
     driver = webdriver.Chrome()
-
+    driver.maximize_window()
     driver.get(url)
     sleep(10)
     request = driver.page_source.encode("utf-8")
@@ -168,7 +160,7 @@ for service in service_abbreviations:
 
     for time_item in timeline:
         
-        content_library = collect_titles()
+        content_library = collect_titles(time_item, time_items_driver, timeline)
         append_csv(content_library)
         counter += 1 
 
