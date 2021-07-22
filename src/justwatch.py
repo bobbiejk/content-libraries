@@ -125,14 +125,14 @@ def collect_titles(time_item, time_items_driver, timeline):
               
     return(content_library)
 
-def append_csv(content_library):
+def append_csv(content_library, service):
 
-    if os.path.isfile("data/content_library.csv") == False:
-        with open("data/content_library.csv", "a", newline="") as csv_file:
+    if os.path.isfile(f"data/content_library_{service}.csv") == False:
+        with open(f"data/content_library_{service}.csv", "a", newline="") as csv_file:
             writer = csv.writer(csv_file, delimiter=";")
             writer.writerow(["service", "date", "nr_releases", "url"])
     
-    with open("data/content_library.csv", "a", newline="") as csv_file:
+    with open(f"data/content_library_{service}.csv", "a", newline="") as csv_file:
         writer = csv.writer(csv_file, delimiter=";")
         for content in content_library:
             writer.writerow([content["service"], content["date"], content['nr_releases'], content['url']])
@@ -167,7 +167,7 @@ for service in service_abbreviations:
     for time_item in timeline:
         
         content_library = collect_titles(time_item, time_items_driver, timeline)
-        append_csv(content_library)
+        append_csv(content_library, service)
         counter += 1 
 
     driver.quit()
