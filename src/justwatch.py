@@ -111,6 +111,8 @@ def collect_titles(time_item, time_items_driver, timeline):
         titles = time_items_driver[counter].find_elements_by_class_name("horizontal-title-list__item") 
         collected_titles = len(titles)
 
+        sleep(2)
+
     for item in range(int(nr_releases)):
 
         print(f'Collecting title {item}..')
