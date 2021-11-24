@@ -4,6 +4,11 @@ This repository contains code to collect the titles released on certain dates fo
 
 \* There is a bug in the code that may cause early termination of the data collection process per service. Check your collected data to check whether this is a problem for your wanted timeperiod. 
 
+## Coding disclaimers
+
+1. The sleep function in between scrolling grows linearly, implying that every scroll the sleep function is increasing by 0.01. Thi is done in order to deal with the increased time spent on loading new data from prior time periods. 
+2. The title of each new release is included in the content's URL which is collected in the CSV file. The title can be obtained by cleaning the CSV. As this script is only concerned with data collection, it is recommended to include the cleaning step after collection of the CSV.
+
 ## Running instructions
 
 1. Alter the streaming services collected
